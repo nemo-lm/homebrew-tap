@@ -18,9 +18,19 @@ cask "pants" do
   end
 
   postflight_steps do
-    run "/usr/bin/xattr",
-        args:         ["-d", "com.apple.quarantine", "{{caskroom_path}}/{{version}}/scie-pants-macos-aarch64"],
-        must_succeed: false,
-        print_stderr: false
+    on_macos do
+      remove "{{temp}}/{{token}}-{{version}}-quarantine-status"
+      run "/usr/bin/xattr",
+          args:         ["-p", "com.apple.quarantine", "{{caskroom_path}}/{{version}}/scie-pants-macos-aarch64"],
+          must_succeed: false,
+          print_stderr: false,
+          stdout_path:  "{{temp}}/{{token}}-{{version}}-quarantine-status"
+
+      if_path_exists "{{temp}}/{{token}}-{{version}}-quarantine-status" do
+        run "/usr/bin/xattr",
+            args: ["-d", "com.apple.quarantine", "{{caskroom_path}}/{{version}}/scie-pants-macos-aarch64"]
+        remove "{{temp}}/{{token}}-{{version}}-quarantine-status"
+      end
+    end
   end
 end
